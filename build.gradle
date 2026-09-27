@@ -1,0 +1,54 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '6.0.54'
+}
+
+group = 'dev.airun.golemysmlink'
+version = '1.0.0'
+base { archivesName = 'golemysm-link-1.20.1' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+def devMods = providers.gradleProperty('devModsDir').orElse(providers.environmentVariable('GOLEM_YSM_DEPS')).getOrElse('libs')
+def embeddedNames = ['l2itemselector-0.2.1.jar', 'l2damagetracker-0.3.7.jar', 'mob_weapon_api-0.2.23.jar', 'cataclysm_mux-0.0.6.jar', 'l2serial-1.2.2.jar']
+def embeddedDir = layout.buildDirectory.dir('compile-api').get().asFile
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            mods { golemysm_link { source sourceSets.main } }
+        }
+        server {
+            workingDirectory project.file('run-server')
+            args '--nogui'
+            mods { golemysm_link { source sourceSets.main } }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    flatDir { dirs devMods }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.4.18'
+    implementation fg.deobf('localmods:modulargolems:2.7.4')
+    implementation fg.deobf('localmods:touhoulittlemaid:1.4.2-forge+mc1.20.1')
+    implementation fg.deobf('localmods:ysm:2.6.5-forge+mc1.20.1-release')
+    implementation fg.deobf('localmods:l2library:2.5.3')
+    compileOnly fg.deobf('localmods:jade:11.13.2')
+    compileOnly files(embeddedNames.collect { new File(embeddedDir, it) })
+}
+
+tasks.register('extractCompileApi', Copy) {
+    from zipTree(file("${devMods}/modulargolems-2.7.4.jar"))
+    from zipTree(file("${devMods}/l2library-2.5.3.jar"))
+    include embeddedNames.collect { "META-INF/jarjar/${it}" }
+    eachFile { path = name }
+    includeEmptyDirs = false
+    into embeddedDir
+}
+tasks.named('compileJava') { dependsOn 'extractCompileApi' }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.named('jar') { finalizedBy 'reobfJar' }

@@ -1,0 +1,8 @@
+.gradle/
+build/
+run/
+run-server/
+libs/
+logs/
+local.properties
+*.log
