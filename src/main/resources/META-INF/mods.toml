@@ -26,14 +26,14 @@ side="BOTH"
 [[dependencies.golemysm_link]]
 modId="modulargolems"
 mandatory=true
-versionRange="[2.7.4]"
+versionRange="[2.6.45,2.7.4]"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.golemysm_link]]
 modId="touhou_little_maid"
 mandatory=true
-versionRange="[1.4.2-forge+mc1.20.1]"
+versionRange="[1.4.0-forge+mc1.20.1,1.5.3-forge+mc1.20.1]"
 ordering="AFTER"
 side="BOTH"
 
