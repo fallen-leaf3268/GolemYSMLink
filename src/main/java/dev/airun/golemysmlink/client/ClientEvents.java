@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
@@ -67,7 +68,12 @@ public final class ClientEvents {
         }
     }
     @SubscribeEvent public static void afterScreen(ScreenEvent.Render.Post event) { ProxyRender.INSTANCE.screenRendering(false); }
-    @SubscribeEvent public static void renderTick(TickEvent.RenderTickEvent event) { ProxyRender.INSTANCE.screenRendering(false); }
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
+    public static void beforeHud(RenderGuiEvent.Pre event) { ProxyRender.INSTANCE.hudRendering(true); }
+    @SubscribeEvent public static void renderTick(TickEvent.RenderTickEvent event) {
+        ProxyRender.INSTANCE.screenRendering(false);
+        ProxyRender.INSTANCE.hudRendering(false);
+    }
     @SubscribeEvent public static void removed(EntityLeaveLevelEvent event) {
         if (event.getLevel().isClientSide && event.getEntity() instanceof HumanoidGolemEntity golem) states.remove(golem.getUUID());
     }

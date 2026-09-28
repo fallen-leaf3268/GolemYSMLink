@@ -16,7 +16,9 @@ public final class ProxyRender implements SpecialRenderSkin {
     public static final ProxyRender INSTANCE = new ProxyRender();
     private final Map<HumanoidGolemEntity, Entry> entries = new IdentityHashMap<>();
     private final Map<HumanoidGolemEntity, Entry> previews = new IdentityHashMap<>();
+    private final Map<HumanoidGolemEntity, Entry> hudPreviews = new IdentityHashMap<>();
     private boolean screenRendering;
+    private boolean hudRendering;
     private static final class Entry {
         final HumanoidGolemEntity source;
         final MaidRenderProxy proxy;
@@ -26,13 +28,16 @@ public final class ProxyRender implements SpecialRenderSkin {
     }
     private ProxyRender() {}
     public void screenRendering(boolean rendering) { screenRendering = rendering; }
+    public void hudRendering(boolean rendering) { hudRendering = rendering; }
     public void clear() {
         entries.values().forEach(e -> e.proxy.release()); entries.clear();
         previews.values().forEach(e -> e.proxy.release()); previews.clear();
+        hudPreviews.values().forEach(e -> e.proxy.release()); hudPreviews.clear();
         screenRendering = false;
+        hudRendering = false;
     }
     public void prune() {
-        prune(entries); prune(previews);
+        prune(entries); prune(previews); prune(hudPreviews);
     }
     private static void prune(Map<HumanoidGolemEntity, Entry> cache) {
         cache.values().removeIf(e -> {
@@ -43,7 +48,7 @@ public final class ProxyRender implements SpecialRenderSkin {
     @Override public void render(HumanoidGolemEntity golem, float yaw, float partial,
                                  PoseStack pose, MultiBufferSource buffers, int light) {
         ModelSelection selected = ClientEvents.selection(golem);
-        var cache = screenRendering ? previews : entries;
+        var cache = screenRendering ? previews : hudRendering ? hudPreviews : entries;
         Entry entry = cache.get(golem);
         if (entry == null) {
             if (cache.size() >= 256) {
@@ -60,7 +65,7 @@ public final class ProxyRender implements SpecialRenderSkin {
             isolated.last().normal().set(pose.last().normal());
             try {
                 entry.proxy.project(golem, selected);
-                if (screenRendering) entry.proxy.stabilizePreviewRotation();
+                if (screenRendering || hudRendering) entry.proxy.stabilizePreviewRotation();
                 if (YsmClientAccess.ready(entry.proxy, selected)
                         && Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entry.proxy) instanceof EntityMaidRenderer renderer) {
                     float scale = golem.getScale();
