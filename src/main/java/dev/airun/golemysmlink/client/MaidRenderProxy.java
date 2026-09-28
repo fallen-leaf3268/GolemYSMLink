@@ -16,7 +16,7 @@ public final class MaidRenderProxy extends EntityMaid {
     private boolean using, blocking;
     private InteractionHand useHand = InteractionHand.MAIN_HAND;
     private ItemStack useStack = ItemStack.EMPTY;
-    private int useRemaining, useElapsed, lastWalkTick = Integer.MIN_VALUE;
+    private int useRemaining, useElapsed;
 
     public MaidRenderProxy(Level level) {
         super(level);
@@ -65,10 +65,9 @@ public final class MaidRenderProxy extends EntityMaid {
         swingTime = swingClock.sample(golem.swinging, golem.swingTime, golem.tickCount,
                 golem.swingingArm == InteractionHand.OFF_HAND);
         attackAnim = golem.attackAnim; oAttackAnim = golem.oAttackAnim;
-        if (lastWalkTick != tickCount) {
-            walkAnimation.update(golem.walkAnimation.speed(), 1);
-            lastWalkTick = tickCount;
-        }
+        walkAnimation.setSpeed(golem.walkAnimation.speed(0));
+        walkAnimation.update(golem.walkAnimation.position() - walkAnimation.position(), 1);
+        walkAnimation.setSpeed(golem.walkAnimation.speed());
         blocking = golem.isBlocking() && !swinging && attackAnim <= 0 && oAttackAnim <= 0;
         using = golem.isUsingItem() || blocking;
         useHand = blocking && golem.shieldSlot() != null ? golem.shieldSlot() : golem.getUsedItemHand();
